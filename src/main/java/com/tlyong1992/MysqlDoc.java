@@ -5,8 +5,11 @@ import com.lowagie.text.rtf.RtfWriter2;
 
 import java.awt.*;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -14,7 +17,7 @@ import java.util.List;
  *
  * @author tlyong1992
  */
-public class MysqlDocer {
+public class MysqlDoc {
 
     /**
      * 键类型字典
@@ -23,52 +26,70 @@ public class MysqlDocer {
      */
     private static Map<String, String> keyType = new HashMap<>();
 
+    /**
+     * 用户名
+     */
+    private static String username;
+    /**
+     * 密码
+     */
+    private static String password;
+    /**
+     * 目标数据库名
+     */
+    private static String database;
+
+    /**
+     * 链接url
+     */
+    private static String url;
+
+    /**
+     * 导出文档目录
+     */
+    private static String outputFile;
+
+
     //初始化jdbc
     static {
         try {
             keyType.put("PRI", "主键");
             keyType.put("UNI", "唯一键");
             Class.forName("com.mysql.jdbc.Driver");
+
+            Properties prop = new Properties();
+
+            try {
+                prop.load(MysqlDoc.class.getClassLoader().getResourceAsStream("config.properties"));
+                username = prop.getProperty("jdbc_user");
+                password=prop.getProperty("jdbc_password");
+                url =prop.getProperty("url");
+                database =prop.getProperty("database");
+                outputFile = prop.getProperty("outputPath")+ database + "-" + new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date()) + ".doc";
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+
+
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * 链接url
-     */
-    private static String url = "jdbc:mysql://127.0.0.1:3306/mysql";
-    /**
-     * 用户名
-     */
-    private static String username = "root";
-    /**
-     * 密码
-     */
-    private static String password = "root";
-    /**
-     * 目标数据库名
-     */
-    private static String schema = "mysql";
-
-    /**
-     * 导出文档目录
-     */
-    private static String outputFile = "E:/word.doc";
-
-    /**
      * 查询所有表的sql语句
      */
-    private static String sql_get_all_tables = "select table_name,TABLE_COMMENT from INFORMATION_SCHEMA.tables where TABLE_SCHEMA='" + schema + "' and TABLE_TYPE='BASE TABLE'";
+    private static String sql_get_all_tables = "select table_name,TABLE_COMMENT from INFORMATION_SCHEMA.tables where TABLE_SCHEMA='" + database + "' and TABLE_TYPE='BASE TABLE'";
 
     /**
      * 查询所有字段的sql语句
      */
-    private static String sql_get_all_columns = "select column_name,data_type,character_octet_length,COLUMN_COMMENT,is_nullable,COLUMN_key from information_schema.`COLUMNS` where TABLE_NAME='{table_name}' and TABLE_SCHEMA='" + schema + "'";
+    private static String sql_get_all_columns = "select column_name,data_type,character_octet_length,COLUMN_COMMENT,is_nullable,COLUMN_key from information_schema.`COLUMNS` where TABLE_NAME='{table_name}' and TABLE_SCHEMA='" + database + "'";
 
     public static void main(String[] args) throws Exception {
         //初始化word文档
         Document document = new Document(PageSize.A4);
+        document.addTitle(database);
         RtfWriter2.getInstance(document, new FileOutputStream(outputFile));
         document.open();
         //查询开始
@@ -139,17 +160,17 @@ public class MysqlDocer {
         //设置表头格式
         table.setWidths(new float[]{8f, 30f, 15f, 8f, 10f, 29f});
         cell1.setHorizontalAlignment(Cell.ALIGN_CENTER);
-        cell1.setBackgroundColor(Color.gray);
+        cell1.setBackgroundColor(StyleConfig.TABLE_HEAD_COLOR);
         cell2.setHorizontalAlignment(Cell.ALIGN_CENTER);
-        cell2.setBackgroundColor(Color.gray);
+        cell2.setBackgroundColor(StyleConfig.TABLE_HEAD_COLOR);
         cell3.setHorizontalAlignment(Cell.ALIGN_CENTER);
-        cell3.setBackgroundColor(Color.gray);
+        cell3.setBackgroundColor(StyleConfig.TABLE_HEAD_COLOR);
         cell4.setHorizontalAlignment(Cell.ALIGN_CENTER);
-        cell4.setBackgroundColor(Color.gray);
+        cell4.setBackgroundColor(StyleConfig.TABLE_HEAD_COLOR);
         cell5.setHorizontalAlignment(Cell.ALIGN_CENTER);
-        cell5.setBackgroundColor(Color.gray);
+        cell5.setBackgroundColor(StyleConfig.TABLE_HEAD_COLOR);
         cell6.setHorizontalAlignment(Cell.ALIGN_CENTER);
-        cell6.setBackgroundColor(Color.gray);
+        cell6.setBackgroundColor(StyleConfig.TABLE_HEAD_COLOR);
         table.addCell(cell1);
         table.addCell(cell2);
         table.addCell(cell3);
